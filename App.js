@@ -1,5 +1,6 @@
+// Importando hooks e bibliotecas necessárias
 import { useState, useEffect } from "react";
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import AsyncStorage from '@react-native-async-storage/async-storage' // usado para salvar dados localmente
 import {
    StyleSheet,
    Text,
@@ -10,15 +11,23 @@ import {
    SafeAreaView,
 } from 'react-native';
 
+// Componente principal do app
 export default function App() {
+   // Estado que controla se a tela mostra a lista ou o formulário
    const [view, setView] = useState('lista');
+
+   // Estado que guarda todas as receitas (array de objetos)
    const [recipes, setRecipes] = useState([]);
+   const [title, setTitle] = useState('');
+   const [ingredients, setIngredients] = useState('');
 
    useEffect(() => {
       const loadRecipes = async () => {
          try {
+            // Pega o que está armazenado em '@recipes'
             const storedRecipes = await AsyncStorage.getItem('@recipes');
             if (storedRecipes !== null) {
+               // Converte de string para objeto/array e salva no estado
                setRecipes(JSON.parse(storedRecipes));
             }
          } catch (e) {
@@ -28,20 +37,30 @@ export default function App() {
       loadRecipes();
    }, []);
 
+   // Função para adicionar uma nova receita
    const handleAddRecipe = () => {
+      // Se não houver título, não faz nada
       if (!title) {
          return;
       }
+      // Cria um novo objeto de receita
       const newRecipe = {
-         id: Date.now().toString(),
+         id: Date.now().toString(), // ID único baseado no timestamp
          title: title,
          ingredients: ingredients,
       };
+      // Atualiza a lista adicionando a nova receita
       setRecipes(currentRecipes => [...currentRecipes, newRecipe]);
+
+      // Limpa os inputs
       setTitle('');
       setIngredients('');
+
+      // Volta para a lista após salvar
       setView('lista');
    }
+
+   // Função para deletar uma receita (filtra e remove pelo ID)
    const handleDeleteRecipe = (id) => {
       setRecipes(currentRecipes => currentRecipes.filter(recipe => recipe.id !== id));
    };
@@ -49,53 +68,48 @@ export default function App() {
    return (
       <SafeAreaView style={styles.container}>
          <ScrollView contentContainerStyle={styles.scrollContainer}>
+            {/* Título do app */}
             <Text style={styles.header}>Meu Livro de Receitas</Text>
 
+            {/* Renderização condicional: 
+                se view === 'lista' mostra a lista, 
+                senão mostra o formulário */}
             {view === 'lista' ? (
-               // SE a variável useState “view” tiver o valor de 'lista', MOSTRE ISTO:
                <View>
-
-                  Botão com o texto Adicionar Nova Receita
-
+                  {/* Botão para trocar para o formulário */}
                   <TouchableOpacity style={styles.addButton} onPress={() => setView('formulario')}>
                      <Text style={styles.buttonText}>Adicionar Nova Receita</Text>
                   </TouchableOpacity>
 
-                  Isso é uma renderização condicional para ver se tem alguma receita
-
+                  {/* Se não houver receitas, mostra mensagem */}
                   {recipes.length === 0 ? (
                      <Text style={styles.emptyText}>Nenhuma receita cadastrada.</Text>
                   ) : (
+                     // Caso haja receitas, percorre o array e cria um "card" para cada uma
                      recipes.map((item) => (
                         <View key={item.id} style={styles.recipeItem}>
-
-                           isso é como um card para mostrar o titulo e a lista de ingredientes da receita
-
+                           {/* Mostra título e ingredientes */}
                            <View style={styles.recipeTextContainer}>
                               <Text style={styles.recipeTitle}>{item.title}</Text>
                               <Text style={styles.recipeIngredients}>{item.ingredients}</Text>
                            </View>
 
-                           Botão para deletar uma receita vai chamar a função handleDeleteRecipe passando o id da receita que o usuário quer deletar.
-
+                           {/* Botão para excluir a receita */}
                            <TouchableOpacity
                               style={styles.deleteButton}
                               onPress={() => handleDeleteRecipe(item.id)}>
                               <Text style={styles.buttonText}>Excluir</Text>
                            </TouchableOpacity>
-
                         </View>
                      ))
                   )}
                </View>
-
             ) : (
-
+               // Tela de formulário
                <View style={styles.formContainer}>
-
                   <Text style={styles.formHeader}>Adicionar Receita</Text>
 
-
+                  {/* Input para título */}
                   <TextInput
                      style={styles.input}
                      placeholder="Título da Receita"
@@ -103,23 +117,26 @@ export default function App() {
                      onChangeText={setTitle}
                   />
 
+                  {/* Input para ingredientes (multilinha) */}
                   <TextInput
                      style={[styles.input, styles.textArea]}
                      placeholder="Ingredientes"
                      value={ingredients}
-
                      onChangeText={setIngredients}
-
                      multiline={true}
                   />
 
+                  {/* Botões de cancelar e salvar */}
                   <View style={styles.formActions}>
-
-                     <TouchableOpacity style={[styles.formButton, styles.cancelButton]} onPress={() => setView('lista')}>
+                     <TouchableOpacity
+                        style={[styles.formButton, styles.cancelButton]}
+                        onPress={() => setView('lista')}>
                         <Text style={styles.buttonText}>Cancelar</Text>
                      </TouchableOpacity>
 
-                     <TouchableOpacity style={[styles.formButton, styles.saveButton]} onPress={handleAddRecipe}>
+                     <TouchableOpacity
+                        style={[styles.formButton, styles.saveButton]}
+                        onPress={handleAddRecipe}>
                         <Text style={styles.buttonText}>Salvar</Text>
                      </TouchableOpacity>
                   </View>
@@ -128,9 +145,9 @@ export default function App() {
          </ScrollView>
       </SafeAreaView>
    );
-
 }
 
+// Estilização da aplicação
 const styles = StyleSheet.create({
    container: {
       flex: 1,
@@ -146,7 +163,7 @@ const styles = StyleSheet.create({
       marginVertical: 20,
       color: '#e67e22',
    },
-   // Formulário
+   // Estilos do formulário
    formContainer: {
       backgroundColor: '#fff',
       padding: 20,
@@ -186,7 +203,7 @@ const styles = StyleSheet.create({
    saveButton: {
       backgroundColor: '#27ae60',
    },
-   // Lista
+   // Estilos da lista
    addButton: {
       backgroundColor: '#007bff',
       padding: 15,
