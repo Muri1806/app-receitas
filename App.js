@@ -20,6 +20,8 @@ export default function App() {
    const [recipes, setRecipes] = useState([]);
    const [title, setTitle] = useState('');
    const [ingredients, setIngredients] = useState('');
+   const [preparation, setPreparation] = useState("");
+   const [editing, setEditing] = useState(null)
 
    useEffect(() => {
       const loadRecipes = async () => {
@@ -43,27 +45,63 @@ export default function App() {
       if (!title) {
          return;
       }
-      // Cria um novo objeto de receita
-      const newRecipe = {
-         id: Date.now().toString(), // ID único baseado no timestamp
-         title: title,
-         ingredients: ingredients,
-      };
-      // Atualiza a lista adicionando a nova receita
-      setRecipes(currentRecipes => [...currentRecipes, newRecipe]);
+      if (editing) {
+         const editedRecipe = {
+            id: editing,
+            title: title,
+            ingredients: ingredients,
+            preparation: preparation,
+         }
+         const updatedRecipes = recipes.map(r =>
+            r.id === editing ? editedRecipe : r
+          );
 
-      // Limpa os inputs
-      setTitle('');
-      setIngredients('');
+         setRecipes(updatedRecipes)
+         setEditing(null)
+         setView("lista")
+      } else {
 
-      // Volta para a lista após salvar
-      setView('lista');
+         // Cria um novo objeto de receita
+         const newRecipe = {
+            id: Date.now().toString(), // ID único baseado no timestamp
+            title: title,
+            ingredients: ingredients,
+            preparation: preparation,
+         };
+         // Atualiza a lista adicionando a nova receita
+         setRecipes(currentRecipes => [...currentRecipes, newRecipe]);
+   
+         // Limpa os inputs
+         setTitle('');
+         setIngredients('');
+         setPreparation('');
+   
+         // Volta para a lista após salvar
+         setView('lista');
+         
+      }
    }
 
    // Função para deletar uma receita (filtra e remove pelo ID)
    const handleDeleteRecipe = (id) => {
       setRecipes(currentRecipes => currentRecipes.filter(recipe => recipe.id !== id));
    };
+
+   // Função para editar uma receita
+   const handleEditRecipe = (id) => {
+
+      setEditing(id)
+      const updatedRecipes = recipes.map(r =>
+         r.id === editing ? editedRecipe : r
+       );
+      console.log(updatedRecipes);
+
+      setTitle(updatedRecipes[0].title)
+      setIngredients(updatedRecipes[0].ingredients)
+      setPreparation(updatedRecipes[0].preparation)
+      
+      setView("formulario")
+   }
 
    return (
       <SafeAreaView style={styles.container}>
@@ -92,7 +130,15 @@ export default function App() {
                            <View style={styles.recipeTextContainer}>
                               <Text style={styles.recipeTitle}>{item.title}</Text>
                               <Text style={styles.recipeIngredients}>{item.ingredients}</Text>
+                              <Text style={styles.recipePreparation}>{item.preparation}</Text>
                            </View>
+
+                           {/* Botão para editar a receita */}
+                           <TouchableOpacity
+                              style={styles.editButton}
+                              onPress={() => handleEditRecipe(item.id)}>
+                              <Text style={styles.buttonText}>Editar</Text>
+                           </TouchableOpacity>
 
                            {/* Botão para excluir a receita */}
                            <TouchableOpacity
@@ -100,6 +146,7 @@ export default function App() {
                               onPress={() => handleDeleteRecipe(item.id)}>
                               <Text style={styles.buttonText}>Excluir</Text>
                            </TouchableOpacity>
+
                         </View>
                      ))
                   )}
@@ -123,6 +170,15 @@ export default function App() {
                      placeholder="Ingredientes"
                      value={ingredients}
                      onChangeText={setIngredients}
+                     multiline={true}
+                  />
+
+                  {/* Input para modo de preparo (multilinha) */}
+                  <TextInput
+                     style={[styles.input, styles.textArea]}
+                     placeholder="Modo de preparo"
+                     value={preparation}
+                     onChangeText={setPreparation}
                      multiline={true}
                   />
 
@@ -233,8 +289,19 @@ const styles = StyleSheet.create({
       color: '#7f8c8d',
       marginTop: 5,
    },
+   recipePreparation: {
+      fontSize: 16,
+      color: '#7f8c8d',
+      marginTop: 5,
+   },
    deleteButton: {
       backgroundColor: '#e74c3c',
+      paddingVertical: 10,
+      paddingHorizontal: 15,
+      borderRadius: 5,
+   },
+   editButton: {
+      backgroundColor: '#FCC201', 
       paddingVertical: 10,
       paddingHorizontal: 15,
       borderRadius: 5,
